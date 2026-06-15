@@ -1,5 +1,9 @@
 # DocuParse
 
+[![CI](https://github.com/flexxrap/docuparse/actions/workflows/ci.yml/badge.svg)](https://github.com/flexxrap/docuparse/actions/workflows/ci.yml)
+![Python 3.12](https://img.shields.io/badge/python-3.12-blue)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+
 OCR-сервис распознавания документов: принимает фото/скан документа (паспорт,
 накладная, счёт), распознаёт текст через OCR и извлекает структурированные
 поля в JSON. Имитирует кейс "фото документа -> данные в CRM".
@@ -8,7 +12,7 @@ OCR-сервис распознавания документов: принима
 
 - [x] Phase 1 - OCR parsing, save/get results
 - [x] Phase 2 - per-document-type field extraction (passport/invoice/receipt)
-- [ ] Phase 3 - CI/CD + final docs
+- [x] Phase 3 - CI/CD + final docs
 
 ## Stack
 
@@ -152,3 +156,5 @@ docker compose exec app pytest
   Textract) for better accuracy on real-world scans and a much smaller Docker
   image.
 - Add PDF support (multi-page documents).
+- Replace the regex-based field extraction with an LLM call for more robust
+  parsing of messy real-world OCR output.
