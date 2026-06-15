@@ -1,3 +1,5 @@
+from typing import Literal
+
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -5,18 +7,29 @@ from app.api.schemas import DocumentOut
 from app.db.models import Document
 from app.db.session import get_db
 from app.services.ocr import extract_text
+from app.services.parsers import extract_fields
 
 router = APIRouter(prefix="/documents", tags=["documents"])
+
+DocType = Literal["passport", "invoice", "receipt"]
 
 
 @router.post("/parse", response_model=DocumentOut, status_code=201)
 async def parse_document(
-    file: UploadFile = File(...), db: AsyncSession = Depends(get_db)
+    file: UploadFile = File(...),
+    doc_type: DocType | None = None,
+    db: AsyncSession = Depends(get_db),
 ) -> Document:
     image_bytes = await file.read()
     raw_text = extract_text(image_bytes)
+    parsed_data = extract_fields(doc_type, raw_text)
 
-    document = Document(filename=file.filename, raw_text=raw_text)
+    document = Document(
+        filename=file.filename,
+        raw_text=raw_text,
+        doc_type=doc_type,
+        parsed_data=parsed_data,
+    )
     db.add(document)
     await db.commit()
     await db.refresh(document)

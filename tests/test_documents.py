@@ -49,3 +49,43 @@ async def test_get_document_not_found(client):
     resp = await client.get("/documents/999999")
 
     assert resp.status_code == 404
+
+
+async def test_parse_document_with_doc_type(client):
+    img = make_text_image("Invoice No: INV-001 Total: 100")
+
+    resp = await client.post(
+        "/documents/parse?doc_type=invoice",
+        files={"file": ("invoice.png", img, "image/png")},
+    )
+
+    assert resp.status_code == 201
+    body = resp.json()
+    assert body["doc_type"] == "invoice"
+    assert isinstance(body["parsed_data"], dict)
+    assert set(body["parsed_data"]) == {"number", "date", "amount", "supplier"}
+
+
+async def test_parse_document_without_doc_type(client):
+    img = make_text_image("PLAIN TEXT")
+
+    resp = await client.post(
+        "/documents/parse",
+        files={"file": ("plain.png", img, "image/png")},
+    )
+
+    assert resp.status_code == 201
+    body = resp.json()
+    assert body["doc_type"] is None
+    assert body["parsed_data"] is None
+
+
+async def test_parse_document_invalid_doc_type(client):
+    img = make_text_image("TEXT")
+
+    resp = await client.post(
+        "/documents/parse?doc_type=unknown",
+        files={"file": ("x.png", img, "image/png")},
+    )
+
+    assert resp.status_code == 422
