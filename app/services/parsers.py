@@ -1,20 +1,23 @@
 import re
 
+# only horizontal whitespace, so patterns never accidentally span lines
+SP = r"[ \t]*"
+
 
 def _search(pattern: str, text: str) -> str | None:
-    match = re.search(pattern, text, re.IGNORECASE | re.MULTILINE)
+    match = re.search(pattern, text, re.IGNORECASE)
     return match.group(1).strip() if match else None
 
 
 def parse_passport(text: str) -> dict:
     return {
-        "full_name": _search(r"(?:name|фио|имя)\s*[:\-]?\s*(.+)", text),
+        "full_name": _search(rf"(?:name|фио|имя){SP}[:\-]?{SP}(.+)", text),
         "passport_number": _search(
-            r"(?:passport\s*(?:no\.?|number)?|серия и номер|№)\s*[:\-]?\s*([a-zа-я0-9 ]{6,})",
+            rf"(?:passport{SP}(?:no\.?|number)?|серия и номер|№){SP}[:\-]?{SP}([a-zа-я0-9 ]{{6,}})",
             text,
         ),
         "birth_date": _search(
-            r"(?:date of birth|dob|дата рождения)\s*[:\-]?\s*(\d{1,2}[./-]\d{1,2}[./-]\d{2,4})",
+            rf"(?:date of birth|dob|дата рождения){SP}[:\-]?{SP}(\d{{1,2}}[./-]\d{{1,2}}[./-]\d{{2,4}})",
             text,
         ),
     }
@@ -23,23 +26,25 @@ def parse_passport(text: str) -> dict:
 def parse_invoice(text: str) -> dict:
     return {
         "number": _search(
-            r"(?:invoice\s*(?:no\.?|number)?|накладная|сч[её]т)\s*№?\s*[:\-]?\s*(\S+)", text
+            rf"(?:invoice{SP}(?:no\.?|number)?|накладная|сч[её]т){SP}№?{SP}[:\-]?{SP}(\S+)", text
         ),
         "date": _search(
-            r"(?:date|дата)\s*[:\-]?\s*(\d{1,2}[./-]\d{1,2}[./-]\d{2,4}|\d{4}-\d{2}-\d{2})", text
+            rf"(?:date|дата){SP}[:\-]?{SP}(\d{{1,2}}[./-]\d{{1,2}}[./-]\d{{2,4}}|\d{{4}}-\d{{2}}-\d{{2}})",
+            text,
         ),
-        "amount": _search(r"(?:total|сумма|итого)\s*[:\-]?\s*([\d\s.,]+)", text),
-        "supplier": _search(r"(?:supplier|поставщик)\s*[:\-]?\s*(.+)", text),
+        "amount": _search(rf"(?:total|сумма|итого){SP}[:\-]?{SP}([\d .,]+)", text),
+        "supplier": _search(rf"(?:supplier|поставщик){SP}[:\-]?{SP}(.+)", text),
     }
 
 
 def parse_receipt(text: str) -> dict:
     return {
-        "store": _search(r"(?:store|shop|магазин)\s*[:\-]?\s*(.+)", text),
+        "store": _search(rf"(?:store|shop|магазин){SP}[:\-]?{SP}(.+)", text),
         "date": _search(
-            r"(?:date|дата)\s*[:\-]?\s*(\d{1,2}[./-]\d{1,2}[./-]\d{2,4}|\d{4}-\d{2}-\d{2})", text
+            rf"(?:date|дата){SP}[:\-]?{SP}(\d{{1,2}}[./-]\d{{1,2}}[./-]\d{{2,4}}|\d{{4}}-\d{{2}}-\d{{2}})",
+            text,
         ),
-        "total": _search(r"(?:total|итого|сумма)\s*[:\-]?\s*([\d\s.,]+)", text),
+        "total": _search(rf"(?:total|итого|сумма){SP}[:\-]?{SP}([\d .,]+)", text),
     }
 
 
